@@ -1,6 +1,6 @@
 {
-    "name": "dbugit/laravel-scout-dbugitsearch-driver",
-    "description": "Driver for Laravel Scout database search package based",
+    "name": "dbugit/laravel-scout-database-driver",
+    "description": "Driver for Laravel Scout database search package",
     "keywords": ["dbugitsearch", "search", "scout", "laravel"],
     "license": "MIT",
     "authors": [{
