@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\Engine;
+use Dbugit\Scout\DbugitSearchable;
 
 class DbugitSearchEngine extends Engine
 {
     /**
      * @var DbugitSearch
      */
-    protected $dbsearch;
+    protected $dbugitsearchable;
 
     /**
      * @var Builder
@@ -25,9 +26,9 @@ class DbugitSearchEngine extends Engine
      *
      * @param DbugitSearch $tnt
      */
-    public function __construct($dbsearch)
+    public function __construct(DbugitSearchable $dbugitsearchable)
     {
-        $this->dbsearch = $dbsearch;
+        $this->dbugitsearchable = $dbugitsearchable;
     }
 
     /**
@@ -39,18 +40,24 @@ class DbugitSearchEngine extends Engine
      */
     public function update($models)
     {
-        $models->each(function ($model) use ($index) {
-            $array = $model->toSearchableArray();
+        $dbugitsearchable = $this->dbugitsearchable;
+
+        $models->each(function ($model) use ($dbugitsearchable){
+            $array              = $model->toSearchableArray();
+            $modelclass         = get_class($model);
+            $dbugitsearchable   = DbugitSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first() ?? new DbugitSearchable();
+            $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));
 
             if (empty($array)) {
                 return;
             }
 
-            if ($model->getKey()) {
-                $index->update($model->getKey(), $array);
-            } else {
-                $index->insert($array);
-            }
+            $dbugitsearchable->fill([
+                "searchable_id"     => $model->getKey(),
+                "searchable_model"  => $modelclass,
+                "searchable_data"   => $searchable_data,
+            ]);
+            $dbugitsearchable->save();
         });
     }
 
@@ -63,12 +70,12 @@ class DbugitSearchEngine extends Engine
      */
     public function delete($models)
     {
-        $this->initIndex($models->first());
         $models->each(function ($model) {
-            $this->dbsearch->selectIndex("{$model->searchableAs()}.index");
-            $index = $this->dbsearch->getIndex();
-            $index->setPrimaryKey($model->getKeyName());
-            $index->delete($model->getKey());
+            $dbugitsearchable   = DbugitSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first();
+
+            if($dbugitsearchable){
+                $dbugitsearchable->delete();
+            }
         });
     }
 
@@ -133,29 +140,15 @@ class DbugitSearchEngine extends Engine
      */
     protected function performSearch(Builder $builder, array $options = [])
     {
-        $index = $builder->index ?: $builder->model->searchableAs();
-        $limit = $builder->limit ?: 10000;
-        $this->dbsearch->selectIndex("{$index}.index");
-
-        $this->builder = $builder;
-
-        if (isset($builder->model->asYouType)) {
-            $this->dbsearch->asYouType = $builder->model->asYouType;
-        }
-
-        if ($builder->callback) {
-            return call_user_func(
-                $builder->callback,
-                $this->dbsearch,
-                $builder->query,
-                $options
-            );
-        }
-        if (isset($this->dbsearch->config['searchBoolean']) ? $this->dbsearch->config['searchBoolean'] : false) {
-            return $this->dbsearch->searchBoolean($builder->query, $limit);
-        } else {
-            return $this->dbsearch->search($builder->query, $limit);
-        }
+        $index              = $builder->index ?: $builder->model->searchableAs();
+        $limit              = $builder->limit ?: 10000;
+        $searchable_model   = get_class($builder->model);
+        $search             = strtolower($builder->query);
+        $this->builder      = $builder;
+        
+        $dbugitsearchable   = DbugitSearchable::where('searchable_model',$searchable_model)->where('searchable_data','like',"%" . $search . "%")->pluck('searchable_id');
+        
+        return $dbugitsearchable;
     }
 
     /**
@@ -168,19 +161,18 @@ class DbugitSearchEngine extends Engine
      */
     public function map(Builder $builder, $results, $model)
     {
-        if (is_null($results['ids']) || count($results['ids']) === 0) {
+        if (is_null($results) || count($results) === 0) {
             return Collection::make();
         }
 
-        $keys = collect($results['ids'])->values()->all();
-
-        $builder = $this->getBuilder($model);
+        $keys       = collect($results)->values()->all();
+        $builder    = $this->getBuilder($model);
 
         if ($this->builder->queryCallback) {
             call_user_func($this->builder->queryCallback, $builder);
         }
 
-        $models = $builder->whereIn(
+        $models     = $builder->whereIn(
             $model->getQualifiedKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
 
@@ -190,7 +182,7 @@ class DbugitSearchEngine extends Engine
         }
 
         // sort models by tnt search result set
-        return collect($results['ids'])->map(function ($hit) use ($models) {
+        return collect($results)->map(function ($hit) use ($models) {
             if (isset($models[$hit])) {
                 return $models[$hit];
             }

@@ -1,10 +1,13 @@
-<?php namespace Dbugit\Scout;
+<?php 
+
+namespace Dbugit\Scout;
 
 use Laravel\Scout\EngineManager;
 use Laravel\Scout\Builder;
 use Illuminate\Support\ServiceProvider;
 use Dbugit\Scout\Console\ImportCommand;
 use Dbugit\Scout\Engines\DbugitSearchEngine;
+use Dbugit\Scout\DbugitSearchable;
 
 class DbugitSearchScoutServiceProvider extends ServiceProvider
 {
@@ -16,11 +19,12 @@ class DbugitSearchScoutServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->app[EngineManager::class]->extend('dbugitsearch', function ($app) {
-            
+            $dbugitsearchable = new DbugitSearchable();
+
             $this->setFuzziness();
             $this->setAsYouType();
 
-            return new DbugitSearchEngine();
+            return new DbugitSearchEngine($dbugitsearchable);
         });
 
         if ($this->app->runningInConsole()) {
@@ -35,7 +39,7 @@ class DbugitSearchScoutServiceProvider extends ServiceProvider
         });
     }
 
-    protected function setFuzziness($tnt)
+    protected function setFuzziness()
     {
         // $tnt->fuzziness            = config('scout.dbugitsearch.fuzziness', $tnt->fuzziness);
         // $tnt->fuzzy_distance       = config('scout.dbugitsearch.fuzzy.distance', $tnt->fuzzy_distance);
@@ -43,7 +47,7 @@ class DbugitSearchScoutServiceProvider extends ServiceProvider
         // $tnt->fuzzy_max_expansions = config('scout.dbugitsearch.fuzzy.max_expansions', $tnt->fuzzy_max_expansions);
     }
 
-    protected function setAsYouType($tnt)
+    protected function setAsYouType()
     {
         // $tnt->asYouType = config('scout.dbugitsearch.asYouType', $tnt->asYouType);
     }
