@@ -26,6 +26,7 @@ php artisan migrate --path=/database/migrations/2020_01_30_100107_create_searcha
 ```
 
 **5**: Update your ***.env*** and ***config/scout.php*** files to set scout driver to dbugitsearch:
+
 ***.env***
 ```php
 	SCOUT_DRIVER = dbugitsearch
