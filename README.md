@@ -76,9 +76,9 @@ class Model extends Model
     use Searchable;
 ```
 
-**7**: Optionally, you can import existing models (using Scout Searchable) have to migrate the database migration into your Laravel project:
+**7**: Optionally, you can import existing models (using Scout Searchable):
 ```bash
-php artisan dbugitsearch:import Path\\To\\Model  
+php artisan dbugitsearch:import Path\\To\\Model
 ```
 
 
