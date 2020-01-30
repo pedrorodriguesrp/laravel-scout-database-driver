@@ -19,6 +19,7 @@ class CreateSearchablesTable extends Migration
             $table->string('searchable_model');
             $table->text('searchable_data');
             $table->timestamps();
+            $table->index(['searchable_id']);
         });
     }
 
