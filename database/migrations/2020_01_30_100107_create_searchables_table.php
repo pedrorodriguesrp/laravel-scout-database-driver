@@ -14,13 +14,14 @@ class CreateSearchablesTable extends Migration
     public function up()
     {
         Schema::create('searchables', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->bigInteger('searchable_id');
-            $table->lineString('searchable_model');
-            $table->longText('searchable_data');
+            $table->increments('id');
+            $table->integer('searchable_id');
+            $table->string('searchable_model');
+            $table->text('searchable_data');
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.
