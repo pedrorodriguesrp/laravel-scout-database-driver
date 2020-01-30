@@ -33,13 +33,12 @@ class DbugitSearchScoutServiceProvider extends ServiceProvider
             $this->commands([
                 ImportCommand::class,
             ]);
-    
             
-            $this->registerMigrations();
+            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
             $this->publishes([
                 __DIR__.'/../database/migrations' => database_path('migrations'),
-            ], 'passport-migrations');
+            ], 'dbugitsearch-migrations');
         }
 
         Builder::macro('constrain', function($constraints) {
@@ -48,17 +47,6 @@ class DbugitSearchScoutServiceProvider extends ServiceProvider
         });
     }
 
-        /**
-     * Register Passport's migration files.
-     *
-     * @return void
-     */
-    protected function registerMigrations()
-    {
-        if (Passport::$runsMigrations) {
-            return $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-        }
-    }
 
     protected function setFuzziness()
     {

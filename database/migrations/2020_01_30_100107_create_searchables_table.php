@@ -15,9 +15,9 @@ class CreateSearchablesTable extends Migration
     {
         Schema::create('searchables', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigIncrements('searchable_id');
-            $table->string('searchable_model');
-            $table->text('searchable_data');
+            $table->bigInteger('searchable_id');
+            $table->lineString('searchable_model');
+            $table->longText('searchable_data');
             $table->timestamps();
         });
     }
