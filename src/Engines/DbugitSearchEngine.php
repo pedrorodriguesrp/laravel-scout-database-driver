@@ -48,16 +48,15 @@ class DbugitSearchEngine extends Engine
             $dbugitsearchable   = DbugitSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first() ?? new DbugitSearchable();
             $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));
 
-            if (empty($array)) {
-                return;
-            }
-
             $dbugitsearchable->fill([
                 "searchable_id"     => $model->getKey(),
                 "searchable_model"  => $modelclass,
                 "searchable_data"   => $searchable_data,
             ]);
-            $dbugitsearchable->save();
+
+            if(!$dbugitsearchable->searchable_data || ($dbugitsearchable->searchable_data && $dbugitsearchable->searchable_data != $searchable_data)){
+                $dbugitsearchable->save();
+            }
         });
     }
 
