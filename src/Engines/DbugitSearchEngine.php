@@ -70,6 +70,7 @@ class DbugitSearchEngine extends Engine
     public function delete($models)
     {
         $models->each(function ($model) {
+            $modelclass         = get_class($model);
             $dbugitsearchable   = DbugitSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first();
 
             if($dbugitsearchable){
