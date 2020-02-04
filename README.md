@@ -85,4 +85,4 @@ php artisan dbugitsearch:import Path\\To\\Model
 
 ## 📖 License
 
-DbugitSearch is an open-sourced software licensed under the [MIT license](LICENSE.md).
+DbugitSearch is an open-sourced software licensed under the [MIT license](LICENSE).
