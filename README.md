@@ -30,7 +30,7 @@ php artisan migrate --path=/database/migrations/2020_01_30_100107_create_searcha
 ***.env***
 ```php
 	SCOUT_DRIVER = dbugitsearch
-	SCOUT_QUEUE  = false //doesn't support queues for now
+	SCOUT_QUEUE  = true //for queueing the process, if false it will be processed emmidiatly uppon creation/update/delete
 ```
 ***config/scout.php***
 ```php
