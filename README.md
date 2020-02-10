@@ -1,6 +1,6 @@
 # About DbugitSearch Scout Driver
 
-Driver for Laravel Scout database search package based
+Laravel Scout Driver based on database search
 
 ...
 
