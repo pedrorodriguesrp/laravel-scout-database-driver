@@ -36,6 +36,7 @@ class ImportCommand extends Command
 
       $modelclass::get()->each(function ($model) use ($modelclass){
             $array              = $model->toSearchableArray();
+            $modelclass         = str_replace("\App","App",$modelclass);
             $dbugitsearchable   = DbugitSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first() ?? new DbugitSearchable();
             $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));
 
