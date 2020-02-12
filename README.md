@@ -1,10 +1,10 @@
-# ⚗️ About DbugitSearch Scout Driver
+# About DbugitSearch Scout Driver
 
-Driver for Laravel Scout database search package based
+Laravel Scout Driver based on database search
 
 ...
 
-## ✨ How to...
+## How to...
 
 > **Requires:**
 - **[PHP 7.2+](https://php.net/releases/)**
@@ -83,6 +83,6 @@ php artisan dbugitsearch:import Path\\To\\Model
 
 
 
-## 📖 License
+## License
 
 DbugitSearch is an open-sourced software licensed under the [MIT license](LICENSE).
