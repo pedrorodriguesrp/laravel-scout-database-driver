@@ -1,4 +1,4 @@
-# About DbugitSearch Scout Driver
+# About APSearch Scout Driver
 
 Laravel Scout Driver based on database search
 
@@ -10,14 +10,14 @@ Laravel Scout Driver based on database search
 - **[PHP 7.2+](https://php.net/releases/)**
 - **[Laravel 5.8+](https://github.com/laravel/laravel)**
 
-**1**: First, you may use [Composer](https://getcomposer.org) to install DbugitSearch as a required dependency into your Laravel project:
+**1**: First, you may use [Composer](https://getcomposer.org) to install APSearch as a required dependency into your Laravel project:
 ```bash
-composer require dbugit/laravel-scout-database-driver
+composer require AdrianoPedro/laravel-scout-database-driver
 ```
 
 **2**: Then, you have to publish the database migration into your Laravel project:
 ```bash
-php artisan vendor:publish --tag=dbugitsearch-migrations
+php artisan vendor:publish --tag=apsearch-migrations
 ```
 
 **3**: Now, you have to migrate the database migration into your Laravel project:
@@ -25,11 +25,11 @@ php artisan vendor:publish --tag=dbugitsearch-migrations
 php artisan migrate --path=/database/migrations/2020_01_30_100107_create_searchables_table.php
 ```
 
-**5**: Update your ***.env*** and ***config/scout.php*** files to set scout driver to dbugitsearch:
+**5**: Update your ***.env*** and ***config/scout.php*** files to set scout driver to apsearch:
 
 ***.env***
 ```php
-	SCOUT_DRIVER = dbugitsearch
+	SCOUT_DRIVER = apsearch
 	SCOUT_QUEUE  = true //for queueing the process, if false it will be processed emmidiatly uppon creation/update/delete
 ```
 ***config/scout.php***
@@ -40,13 +40,13 @@ php artisan migrate --path=/database/migrations/2020_01_30_100107_create_searcha
 	'secret' => env('ALGOLIA_SECRET', ''),
 ],
 //...
-'dbugitsearch' => [
+'apsearch' => [
 	//
 ],
 //...
 ```
 
-**5**: Add DbugitSearchScoutServiceProvider the providers list on your projects **config/app.php**:
+**5**: Add apSearchScoutServiceProvider the providers list on your projects **config/app.php**:
 ```php
 <?php
 
@@ -55,7 +55,7 @@ return [
     'providers' => [
         //...
         Laravel\Scout\ScoutServiceProvider::class,
-        Dbugit\Scout\DbugitSearchScoutServiceProvider::class,
+        AdrianoPedro\Scout\APSearchScoutServiceProvider::class,
     ],
     //...
 ];      
@@ -78,11 +78,11 @@ class Model extends Model
 
 **7**: Optionally, you can import existing models (using Scout Searchable):
 ```bash
-php artisan dbugitsearch:import Path\\To\\Model
+php artisan apsearch:import Path\\To\\Model
 ```
 
 
 
 ## License
 
-DbugitSearch is an open-sourced software licensed under the [MIT license](LICENSE).
+APSearch is an open-sourced software licensed under the [MIT license](LICENSE).

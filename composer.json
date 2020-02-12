@@ -1,10 +1,10 @@
 {
-    "name": "dbugit/laravel-scout-database-driver",
+    "name": "adrianopedro/laravel-scout-database-driver",
     "description": "Driver for Laravel Scout database search package",
-    "keywords": ["dbugitsearch", "search", "scout", "laravel"],
+    "keywords": ["search", "search", "scout", "laravel"],
     "license": "MIT",
     "authors": [{
-        "name": "Dbugit Team",
+        "name": "Adriano Pedro",
         "email": "adrianopedro@gmail.com"
     }],
     "require": {
@@ -23,7 +23,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Dbugit\\Scout\\": "src/"
+            "AdrianoPedro\\Scout\\": "src/"
         }
     },
     "autoload-dev": {
@@ -37,7 +37,7 @@
         },
         "laravel": {
             "providers": [
-                "Dbugit\\Scout\\DbugitSearchScoutServiceProvider"
+                "AdrianoPedro\\Scout\\APSearchScoutServiceProvider"
             ]
         }
     },
