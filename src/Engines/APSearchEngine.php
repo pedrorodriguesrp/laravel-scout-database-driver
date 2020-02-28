@@ -93,7 +93,7 @@ class APSearchEngine extends Engine
         try {
             return $this->performSearch($builder);
         } catch (IndexNotFoundException $e) {
-            $this->initIndex($builder->model);
+            return $e;
         }
     }
 
@@ -142,13 +142,21 @@ class APSearchEngine extends Engine
      */
     protected function performSearch(Builder $builder, array $options = [])
     {
-        $index              = $builder->index ?: $builder->model->searchableAs();
-        $limit              = $builder->limit ?: 10000;
         $searchable_model   = get_class($builder->model);
         $search             = strtolower($builder->query);
         $this->builder      = $builder;
 
-        $apsearchable   = APSearchable::where('searchable_model',$searchable_model)->where('searchable_data','like',"%" . $search . "%")->pluck('searchable_id');
+        switch($this->apsearchable->searchMode){
+            case 'BOOLEAN':
+            case 'NATURAL LANGUAGE':
+                $mode               = $this->apsearchable->searchMode;
+                $searchable_model   = addslashes($searchable_model);
+                $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('*$search*' IN $mode MODE)")->pluck('searchable_id');
+                break;
+            default:
+                $apsearchable       = APSearchable::where('searchable_model',$searchable_model)->where('searchable_data','like',"%" . $search . "%")->pluck('searchable_id');
+                break;
+        }
         
         return $apsearchable;
     }
@@ -236,52 +244,6 @@ class APSearchEngine extends Engine
         return $results['hits'];
     }
 
-    public function initIndex($model)
-    {
-        $indexName = $model->searchableAs();
-
-        if (!file_exists($this->dbsearch->config['storage']."/{$indexName}.index")) {
-            $indexer = $this->dbsearch->createIndex("$indexName.index");
-            $indexer->setDatabaseHandle($model->getConnection()->getPdo());
-            $indexer->setPrimaryKey($model->getKeyName());
-        }
-    }
-
-    /**
-     * The search index results ($results['ids']) need to be compared against our query
-     * that contains the constraints.
-     *
-     * To get the correct results and counts for the pagination, we remove those ids
-     * from the search index results that were found by the search but are not part of
-     * the query ($sub) that is constrained.
-     *
-     * This is achieved with self joining the constrained query as subquery and selecting
-     * the ids which are not matching to anything (i.e., is null).
-     *
-     * The constraints usually remove only a small amount of results, which is why the non
-     * matching results are looked up and removed, instead of returning a collection with
-     * all the valid results.
-     */
-    private function discardIdsFromResultSetByConstraints($builder, $searchResults)
-    {
-        $qualifiedKeyName    = $builder->model->getQualifiedKeyName(); // tableName.id
-        $subQualifiedKeyName = 'sub.'.$builder->model->getKeyName(); // sub.id
-
-        $sub = $this->getBuilder($builder->model)->whereIn(
-            $qualifiedKeyName, $searchResults
-        ); // sub query for left join
-
-        $discardIds = $builder->model->newQuery()
-            ->select($qualifiedKeyName)
-            ->leftJoin(DB::raw('('.$sub->getQuery()->toSql().') as '. DB::connection()->getTablePrefix() .'sub'), $subQualifiedKeyName, '=', $qualifiedKeyName)
-            ->addBinding($sub->getQuery()->getBindings(), 'join')
-            ->whereIn($qualifiedKeyName, $searchResults)
-            ->whereNull($subQualifiedKeyName)
-            ->pluck($builder->model->getKeyName());
-
-        // returns values of $results['ids'] that are not part of $discardIds
-        return collect($searchResults)->diff($discardIds);
-    }
 
     /**
      * Determine if the given model uses soft deletes.
@@ -381,10 +343,6 @@ class APSearchEngine extends Engine
      */
     public function flush($model)
     {
-        $indexName   = $model->searchableAs();
-        $pathToIndex = $this->dbsearch->config['storage']."/{$indexName}.index";
-        if (file_exists($pathToIndex)) {
-            unlink($pathToIndex);
-        }
+        // 
     }
 }

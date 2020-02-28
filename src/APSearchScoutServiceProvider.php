@@ -23,8 +23,7 @@ class APSearchScoutServiceProvider extends ServiceProvider
         $this->app[EngineManager::class]->extend('apsearch', function ($app) {
             $apsearchable = new APSearchable();
 
-            $this->setFuzziness();
-            $this->setAsYouType();
+            $this->setSearchMode($apsearchable);
 
             return new APSearchEngine($apsearchable);
         });
@@ -48,16 +47,9 @@ class APSearchScoutServiceProvider extends ServiceProvider
     }
 
 
-    protected function setFuzziness()
+    protected function setSearchMode($apsearchable)
     {
-        // $tnt->fuzziness            = config('scout.apsearch.fuzziness', $tnt->fuzziness);
-        // $tnt->fuzzy_distance       = config('scout.apsearch.fuzzy.distance', $tnt->fuzzy_distance);
-        // $tnt->fuzzy_prefix_length  = config('scout.apsearch.fuzzy.prefix_length', $tnt->fuzzy_prefix_length);
-        // $tnt->fuzzy_max_expansions = config('scout.apsearch.fuzzy.max_expansions', $tnt->fuzzy_max_expansions);
+        $apsearchable->searchMode = config('scout.apsearch.searchMode', $apsearchable->searchMode);
     }
 
-    protected function setAsYouType()
-    {
-        // $tnt->asYouType = config('scout.apsearch.asYouType', $tnt->asYouType);
-    }
 }

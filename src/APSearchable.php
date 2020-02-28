@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 class APSearchable extends Model
 {
 
+    protected $searchMode = "LIKE";
     /**
      * The table associated with the model.
      * 
