@@ -48,7 +48,7 @@ class APSearchEngine extends Engine
             $modelclass         = str_replace("\App","App",$modelclass);
 
 
-            $apsearchable   = APSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first() ?? new APSearchable();
+            $apsearchable       = APSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first() ?? new APSearchable();
             $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));
 
             if(!$apsearchable->searchable_data || ($apsearchable->searchable_data && $apsearchable->searchable_data != $searchable_data)){
