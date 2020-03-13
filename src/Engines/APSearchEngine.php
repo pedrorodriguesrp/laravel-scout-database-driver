@@ -144,15 +144,20 @@ class APSearchEngine extends Engine
     {
         $searchable_model   = get_class($builder->model);
         $search             = strtolower($builder->query);
+        $sanatized_search   = str_replace(["+","-","*"],"",$search);
         $this->builder      = $builder;
         $searchMode         = $builder->model->searchMode ?? $this->apsearchable->searchMode;
 
         switch($searchMode){
             case 'BOOLEAN':
             case 'NATURAL LANGUAGE':
-                $mode               = $searchMode;
-                $searchable_model   = addslashes($searchable_model);
-                $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('$search' IN $mode MODE)")->pluck('searchable_id');
+                if(strlen($sanatized_search) > 0){
+                    $mode               = $searchMode;
+                    $searchable_model   = addslashes($searchable_model);
+                    $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('*$search*' IN $mode MODE)")->pluck('searchable_id');
+                } else {
+                    $apsearchable = [];
+                }
                 break;
             default:
                 $apsearchable       = APSearchable::where('searchable_model',$searchable_model)->where('searchable_data','like',"%" . $search . "%")->pluck('searchable_id');
@@ -164,8 +169,8 @@ class APSearchEngine extends Engine
                 // $apsearchable     = $apsearchable->pluck('searchable_id');
                 break;
         }
-        
-        return $apsearchable;
+
+        return $apsearchable->unique();
     }
 
     /**
