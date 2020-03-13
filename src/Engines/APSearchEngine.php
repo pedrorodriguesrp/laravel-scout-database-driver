@@ -152,7 +152,7 @@ class APSearchEngine extends Engine
             case 'NATURAL LANGUAGE':
                 $mode               = $searchMode;
                 $searchable_model   = addslashes($searchable_model);
-                $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('*$search*' IN $mode MODE)")->pluck('searchable_id');
+                $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('$search' IN $mode MODE)")->pluck('searchable_id');
                 break;
             default:
                 $apsearchable       = APSearchable::where('searchable_model',$searchable_model)->where('searchable_data','like',"%" . $search . "%")->pluck('searchable_id');
