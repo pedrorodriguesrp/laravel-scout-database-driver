@@ -9,13 +9,13 @@
     }],
     "require": {
         "php": ">=7.1",
-        "laravel/scout": "7.*",
-        "illuminate/bus": "~5.4|^6.0",
-        "illuminate/contracts": "~5.4|^6.0",
-        "illuminate/database": "~5.4|^6.0",
-        "illuminate/pagination": "~5.4|^6.0",
-        "illuminate/queue": "~5.4|^6.0",
-        "illuminate/support": "~5.4|^6.0"
+        "laravel/scout": "^7.0",
+        "illuminate/bus": "^7.0",
+        "illuminate/contracts": "^7.0",
+        "illuminate/database": "^7.0",
+        "illuminate/pagination": "^7.0",
+        "illuminate/queue": "^7.0",
+        "illuminate/support": "^7.0"
     },
     "require-dev": {
         "mockery/mockery": "~0.9",
