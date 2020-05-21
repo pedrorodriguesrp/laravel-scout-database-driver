@@ -2,7 +2,6 @@
 
 Laravel Scout Driver based on database search
 
-...
 
 ## How to...
 
