@@ -40,7 +40,10 @@ php artisan migrate --path=/database/migrations/create_searchables_table.php
 ],
 //...
 'apsearch' => [
-	//
+    'asYouType'     => true,
+    'searchMode'    => "LIKE",  // LIKE, BOOLEAN, NATURAL, DIRECT (direct
+                                // search over model collection).
+                                // searchModel can also be defined per Model.
 ],
 //...
 ```
@@ -73,6 +76,9 @@ class Model extends Model
 {
     //..
     use Searchable;
+
+    public searchMode = "LIKE"; // Optional. If not defined config/scout.php
+                                // option will be used.
 ```
 
 **7**: Optionally, you can import existing models (using Scout Searchable):
