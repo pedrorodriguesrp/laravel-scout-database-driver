@@ -43,21 +43,23 @@ class APSearchEngine extends Engine
         $apsearchable = $this->apsearchable;
 
         $models->each(function ($model) use ($apsearchable){
-            $array              = $model->toSearchableArray();
-            $modelclass         = get_class($model);
-            $modelclass         = str_replace("\App","App",$modelclass);
+            if(($model->searchMode && $model->searchMode !== "DIRECT") || (!$model->searchMode && $this->apsearchable->searchMode !== "DIRECT")){
+                $array              = $model->toSearchableArray();
+                $modelclass         = get_class($model);
+                $modelclass         = str_replace("\App","App",$modelclass);
 
 
-            $apsearchable       = APSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first() ?? new APSearchable();
-            $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));
+                $apsearchable       = APSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first() ?? new APSearchable();
+                $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));
 
-            if(!$apsearchable->searchable_data || ($apsearchable->searchable_data && $apsearchable->searchable_data != $searchable_data)){
-                $apsearchable->fill([
-                    "searchable_id"     => $model->getKey(),
-                    "searchable_model"  => $modelclass,
-                    "searchable_data"   => $searchable_data,
-                ]);
-                $apsearchable->save();
+                if(!$apsearchable->searchable_data || ($apsearchable->searchable_data && $apsearchable->searchable_data != $searchable_data)){
+                    $apsearchable->fill([
+                        "searchable_id"     => $model->getKey(),
+                        "searchable_model"  => $modelclass,
+                        "searchable_data"   => $searchable_data,
+                    ]);
+                    $apsearchable->save();
+                }
             }
         });
     }
