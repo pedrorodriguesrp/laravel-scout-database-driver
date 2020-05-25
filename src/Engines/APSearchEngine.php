@@ -159,6 +159,20 @@ class APSearchEngine extends Engine
                     $apsearchable = [];
                 }
                 break;
+            case 'DIRECT':
+                if(strlen($sanatized_search) > 0){
+                    
+                    $mode               = $searchMode;
+                    $searchable_model   = addslashes($searchable_model);
+
+
+                    $apsearchable       = $builder->model->get()->filter(function($item) use($search){
+                        return strpos(strtolower(implode(" ", $item->toSearchableArray())), $search) > -1;
+                    })->pluck("id");
+                } else {
+                    $apsearchable = [];
+                }
+                break;
             default:
                 $apsearchable       = APSearchable::where('searchable_model',$searchable_model)->where('searchable_data','like',"%" . $search . "%")->pluck('searchable_id');
                 // $searchchunks       = explode(" ",$search);
