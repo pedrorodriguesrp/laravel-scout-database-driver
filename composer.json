@@ -9,7 +9,7 @@
     }],
     "require": {
         "php": ">=7.1",
-        "laravel/scout": "^8.0",
+        "laravel/scout": "^8.0.1",
         "illuminate/bus": "^7.0",
         "illuminate/contracts": "^7.0",
         "illuminate/database": "^7.0",
