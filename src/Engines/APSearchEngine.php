@@ -42,17 +42,17 @@ class APSearchEngine extends Engine
     {
         $apsearchable = $this->apsearchable;
 
-        $models->each(function ($model) use ($apsearchable){
-            if(($model->searchMode && $model->searchMode !== "DIRECT") || (!$model->searchMode && $this->apsearchable->searchMode !== "DIRECT")){
+        $models->each(function ($model) use ($apsearchable) {
+            if (($model->searchMode && $model->searchMode !== "DIRECT") || (!$model->searchMode && $this->apsearchable->searchMode !== "DIRECT")) {
                 $array              = $model->toSearchableArray();
                 $modelclass         = get_class($model);
-                $modelclass         = str_replace("\App","App",$modelclass);
+                $modelclass         = str_replace("\App", "App", $modelclass);
 
 
-                $apsearchable       = APSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first() ?? new APSearchable();
+                $apsearchable       = APSearchable::where('searchable_id', $model->getKey())->where("searchable_model", $modelclass)->first() ?? new APSearchable();
                 $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));
 
-                if(!$apsearchable->searchable_data || ($apsearchable->searchable_data && $apsearchable->searchable_data != $searchable_data)){
+                if (!$apsearchable->searchable_data || ($apsearchable->searchable_data && $apsearchable->searchable_data != $searchable_data)) {
                     $apsearchable->fill([
                         "searchable_id"     => $model->getKey(),
                         "searchable_model"  => $modelclass,
@@ -75,9 +75,9 @@ class APSearchEngine extends Engine
     {
         $models->each(function ($model) {
             $modelclass         = get_class($model);
-            $apsearchable       = APSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first();
+            $apsearchable       = APSearchable::where('searchable_id', $model->getKey())->where("searchable_model", $modelclass)->first();
 
-            if($apsearchable){
+            if ($apsearchable) {
                 $apsearchable->delete();
             }
         });
@@ -90,10 +90,10 @@ class APSearchEngine extends Engine
      *
      * @return mixed
      */
-    public function search(Builder $builder)
+    public function search(Builder $builder, array $options = [])
     {
         try {
-            return $this->performSearch($builder);
+            return $this->performSearch($builder, $options);
         } catch (IndexNotFoundException $e) {
             return $e;
         }
@@ -110,17 +110,40 @@ class APSearchEngine extends Engine
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
-        $results = $this->performSearch($builder);
+        $results = [];
+        $searchResults = $this->performSearch($builder);
+        $searchResults = $searchResults['ids'];
 
         if ($builder->limit) {
             $results['hits'] = $builder->limit;
         }
 
-        $filtered = $this->discardIdsFromResultSetByConstraints($builder, $results['ids']);
+        /**
+         * New feature to implement overall orderby
+         */
+        $model      = $this->builder->model;
+        $keys       = collect($searchResults)->values()->all();
+        $builder    = $this->getBuilder($model);
 
-        $results['hits'] = $filtered->count();
+        if ($this->builder->queryCallback) {
+            call_user_func($this->builder->queryCallback, $builder);
+        }
 
-        $chunks = array_chunk($filtered->toArray(), $perPage);
+        $models     = $builder->whereIn(
+            $model->getQualifiedKeyName(),
+            $keys
+        )->pluck('id');
+        // ->keyBy($model->getKeyName());
+
+        // sort models by user choice
+        if (!empty($this->builder->orders)) {
+            $searchResults = $models;
+        }
+
+        /** ********* **/
+
+        $results['hits'] = $searchResults->count();
+        $chunks = array_chunk($searchResults->toArray(), $perPage);
 
         if (empty($chunks)) {
             return $results;
@@ -129,7 +152,7 @@ class APSearchEngine extends Engine
         if (array_key_exists($page - 1, $chunks)) {
             $results['ids'] = $chunks[$page - 1];
         } else {
-            $results['ids'] = end($chunks);
+            $results['ids'] = [];
         }
 
         return $results;
@@ -146,29 +169,26 @@ class APSearchEngine extends Engine
     {
         $searchable_model   = get_class($builder->model);
         $search             = strtolower($builder->query);
-        $sanatized_search   = str_replace(["+","-","*"],"",$search);
+        $sanatized_search   = str_replace(["+", "-", "*"], "", $search);
         $this->builder      = $builder;
         $searchMode         = $builder->model->searchMode ?? $this->apsearchable->searchMode;
 
-        switch($searchMode){
+        switch ($searchMode) {
             case 'BOOLEAN':
             case 'NATURAL LANGUAGE':
-                if(strlen($sanatized_search) > 0){
+                if (strlen($sanatized_search) > 0) {
                     $mode               = $searchMode;
                     $searchable_model   = addslashes($searchable_model);
                     $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('*$search*' IN $mode MODE)")->pluck('searchable_id');
                 } else {
-                    $apsearchable = [];
+                    $apsearchable       = [];
                 }
                 break;
             case 'DIRECT':
-                if(strlen($sanatized_search) > 0){
-                    
+                if (strlen($sanatized_search) > 0) {
                     $mode               = $searchMode;
                     $searchable_model   = addslashes($searchable_model);
-
-
-                    $apsearchable       = $builder->model->get()->filter(function($item) use($search){
+                    $apsearchable       = $builder->model->get()->filter(function ($item) use ($search) {
                         return strpos(strtolower(implode(" ", $item->toSearchableArray())), $search) > -1;
                     })->pluck("id");
                 } else {
@@ -176,17 +196,14 @@ class APSearchEngine extends Engine
                 }
                 break;
             default:
-                $apsearchable       = APSearchable::where('searchable_model',$searchable_model)->where('searchable_data','like',"%" . $search . "%")->pluck('searchable_id');
-                // $searchchunks       = explode(" ",$search);
-                // $apsearchable       = DB::table('searchables')->where('searchable_data','like',"%" . $searchchunks[0] . "%");
-                // for($i = 1; $i < count($searchchunks); $i++){
-                //     $apsearchable = $apsearchable->orWhere('searchable_data','like',"%" . $searchchunks[$i] . "%");
-                // }
-                // $apsearchable     = $apsearchable->pluck('searchable_id');
+                $apsearchable       = APSearchable::where('searchable_model', $searchable_model)->where('searchable_data', 'like', "%" . $search . "%")->pluck('searchable_id');
                 break;
         }
 
-        return $apsearchable->unique();
+        $results = $apsearchable->unique()->toArray();
+        $results = ["ids" => $results];
+
+        return $results;
     }
 
     /**
@@ -199,6 +216,8 @@ class APSearchEngine extends Engine
      */
     public function map(Builder $builder, $results, $model)
     {
+        $results = $results['ids'] ?? [];
+
         if (is_null($results) || count($results) === 0) {
             return Collection::make();
         }
@@ -211,7 +230,8 @@ class APSearchEngine extends Engine
         }
 
         $models     = $builder->whereIn(
-            $model->getQualifiedKeyName(), $keys
+            $model->getQualifiedKeyName(),
+            $keys
         )->get()->keyBy($model->getKeyName());
 
         // sort models by user choice

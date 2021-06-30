@@ -32,12 +32,12 @@ class ImportCommand extends Command
      */
     public function handle(Dispatcher $events)
     {
-      $modelclass = $this->argument('model');
+        $modelclass = $this->argument('model');
 
-      $modelclass::get()->each(function ($model) use ($modelclass){
+        $modelclass::get()->each(function ($model) use ($modelclass) {
             $array              = $model->toSearchableArray();
-            $modelclass         = str_replace("\App","App",$modelclass);
-            $apsearchable       = APSearchable::where('searchable_id',$model->getKey())->where("searchable_model",$modelclass)->first() ?? new APSearchable();
+            $modelclass         = str_replace("\App", "App", $modelclass);
+            $apsearchable       = APSearchable::where('searchable_id', $model->getKey())->where("searchable_model", $modelclass)->first() ?? new APSearchable();
             $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));
 
             if (empty($array)) {
@@ -50,6 +50,7 @@ class ImportCommand extends Command
                 "searchable_data"   => $searchable_data,
             ]);
             $apsearchable->save();
+            $this->line('<comment>Imported [' . $modelclass . '] model ID:</comment> ' . $apsearchable->id);
         });
     }
 }
