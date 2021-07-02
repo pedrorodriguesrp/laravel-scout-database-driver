@@ -122,26 +122,26 @@ class APSearchEngine extends Engine
          * New feature to implement overall orderby
          */
         $model      = $this->builder->model;
-        $keys       = collect($searchResults)->values()->all();
         $builder    = $this->getBuilder($model);
-
+        
         if ($this->builder->queryCallback) {
             call_user_func($this->builder->queryCallback, $builder);
         }
-
-        $models     = $builder->whereIn(
-            $model->getQualifiedKeyName(),
-            $keys
-        )->pluck('id');
-        // ->keyBy($model->getKeyName());
+        
+        // $models     = $builder->whereIn(
+        //     $model->getQualifiedKeyName(),
+        //     array_values($searchResults)
+        // )->pluck('id');
 
         // sort models by user choice
-        if (!empty($this->builder->orders)) {
-            $searchResults = $models;
-        }
-
+        // if (!empty($this->builder->orders)) {
+        //     $searchResults = $models;
+        // } else {
+        //     $searchResults = collect($searchResults);
+        // }
         /** ********* **/
-
+        
+        $searchResults = collect($searchResults);
         $results['hits'] = $searchResults->count();
         $chunks = array_chunk($searchResults->toArray(), $perPage);
 
@@ -180,6 +180,7 @@ class APSearchEngine extends Engine
                     $mode               = $searchMode;
                     $searchable_model   = addslashes($searchable_model);
                     $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('*$search*' IN $mode MODE)")->pluck('searchable_id');
+                    // $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('*$search*' IN $mode MODE)")->join($builder->model->getTable(), $builder->model->getQualifiedKeyName(), "=", "searchables.searchable_id")->mergeConstraintsFrom($builder->constraints)->pluck('searchable_id');
                 } else {
                     $apsearchable       = [];
                 }
@@ -196,13 +197,16 @@ class APSearchEngine extends Engine
                 }
                 break;
             default:
-                $apsearchable       = APSearchable::where('searchable_model', $searchable_model)->where('searchable_data', 'like', "%" . $search . "%")->pluck('searchable_id');
+                $apsearchable       = APSearchable::where('searchable_model', $searchable_model)->where('searchable_data', 'like', "%" . $search . "%")->join($builder->model->getTable(), $builder->model->getQualifiedKeyName(), "=", "searchables.searchable_id")->mergeConstraintsFrom($builder->constraints);
+                foreach ($builder->orders as $order) {
+                    $apsearchable = $apsearchable->orderBy($order['column'], $order['direction']);
+                }
+                $apsearchable       = $apsearchable->pluck('searchable_id');
+                // $apsearchable       = APSearchable::where('searchable_model', $searchable_model)->where('searchable_data', 'like', "%" . $search . "%")->pluck('searchable_id');
                 break;
         }
-
         $results = $apsearchable->unique()->toArray();
         $results = ["ids" => $results];
-
         return $results;
     }
 
