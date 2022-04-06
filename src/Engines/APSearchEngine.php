@@ -180,7 +180,6 @@ class APSearchEngine extends Engine
                     $mode               = $searchMode;
                     $searchable_model   = addslashes($searchable_model);
                     $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('*$search*' IN $mode MODE)")->pluck('searchable_id');
-                    // $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('*$search*' IN $mode MODE)")->join($builder->model->getTable(), $builder->model->getQualifiedKeyName(), "=", "searchables.searchable_id")->mergeConstraintsFrom($builder->constraints)->pluck('searchable_id');
                 } else {
                     $apsearchable       = [];
                 }
@@ -197,12 +196,12 @@ class APSearchEngine extends Engine
                 }
                 break;
             default:
-                $apsearchable       = APSearchable::where('searchable_model', $searchable_model)->where('searchable_data', 'like', "%" . $search . "%")->join($builder->model->getTable(), $builder->model->getQualifiedKeyName(), "=", "searchables.searchable_id")->mergeConstraintsFrom($builder->constraints);
+                $apsearchable       = APSearchable::where('searchable_model', $searchable_model)->where('searchable_data', 'like', "%" . $search . "%")->join($builder->model->getTable(), $builder->model->getQualifiedKeyName(), "=", "searchables.searchable_id");
+                $apsearchable       = isset($builder->constraints) ? $apsearchable->mergeConstraintsFrom($builder->constraints) : $apsearchable;
                 foreach ($builder->orders as $order) {
                     $apsearchable = $apsearchable->orderBy($order['column'], $order['direction']);
                 }
                 $apsearchable       = $apsearchable->pluck('searchable_id');
-                // $apsearchable       = APSearchable::where('searchable_model', $searchable_model)->where('searchable_data', 'like', "%" . $search . "%")->pluck('searchable_id');
                 break;
         }
         $results = $apsearchable->unique()->toArray();
