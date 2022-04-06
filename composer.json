@@ -8,14 +8,14 @@
         "email": "adrianopedro@gmail.com"
     }],
     "require": {
-        "php": ">=7.1",
-        "laravel/scout": "^8.0.1",
-        "illuminate/bus": "^8.0",
-        "illuminate/contracts": "^8.0",
-        "illuminate/database": "^8.0",
-        "illuminate/pagination": "^8.0",
-        "illuminate/queue": "^8.0",
-        "illuminate/support": "^8.0"
+        "php": ">=7.2",
+        "illuminate/bus": ">=8.0",
+        "illuminate/contracts": ">=8.0",
+        "illuminate/database": ">=8.0",
+        "illuminate/pagination": ">=8.0",
+        "illuminate/queue": ">=8.0",
+        "illuminate/support": ">=8.0",
+        "laravel/scout": ">=8.0"
     },
     "require-dev": {
         "mockery/mockery": "~0.9",
@@ -33,7 +33,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "1.0-dev"
+            "dev-master": "1.2-dev"
         },
         "laravel": {
             "providers": [
