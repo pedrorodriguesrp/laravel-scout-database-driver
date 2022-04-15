@@ -396,4 +396,14 @@ class APSearchEngine extends Engine
     {
         // 
     }
+
+    public function lazyMap($builder, $results, $model){
+
+    }
+    public function createIndex($name, $options = []){
+
+    }
+    public function deleteIndex($name){
+
+    }
 }
