@@ -58,6 +58,7 @@ class APSearchEngine extends Engine
                     $searchable_data .= is_object($value) || is_array($value) ? json_encode($value) : $value;
                     $searchable_data .= " ";
                 }
+                $searchable_data    =  mb_strtolower($searchable_data);
 
                 if (!$apsearchable->searchable_data || ($apsearchable->searchable_data && $apsearchable->searchable_data != $searchable_data)) {
                     $apsearchable->fill([
