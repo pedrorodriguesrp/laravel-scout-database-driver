@@ -50,7 +50,14 @@ class APSearchEngine extends Engine
 
 
                 $apsearchable       = APSearchable::where('searchable_id', $model->getKey())->where("searchable_model", $modelclass)->first() ?? new APSearchable();
-                $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));
+                
+                // $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));     
+                
+                $searchable_data    = "";
+                foreach ($model->toSearchableArray() ?? [] as $key => $value) {
+                    $searchable_data .= is_object($value) || is_array($value) ? json_encode($value) : $value;
+                    $searchable_data .= " ";
+                }
 
                 if (!$apsearchable->searchable_data || ($apsearchable->searchable_data && $apsearchable->searchable_data != $searchable_data)) {
                     $apsearchable->fill([
