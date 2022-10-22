@@ -15,7 +15,7 @@
         "illuminate/pagination": ">=8.0",
         "illuminate/queue": ">=8.0",
         "illuminate/support": ">=8.0",
-        "laravel/scout": ">=8.0"
+        "laravel/scout": ">=9.0"
     },
     "require-dev": {
         "mockery/mockery": "~0.9",
