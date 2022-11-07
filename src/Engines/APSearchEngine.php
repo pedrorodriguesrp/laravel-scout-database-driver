@@ -187,7 +187,7 @@ class APSearchEngine extends Engine
                 if (strlen($sanatized_search) > 0) {
                     $mode               = $searchMode;
                     $searchable_model   = addslashes($searchable_model);
-                    $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchable_data)AGAINST('*$search*' IN $mode MODE)")->pluck('searchable_id');
+                    $apsearchable       = APSearchable::whereRaw("searchable_model = '$searchable_model' AND MATCH(searchables.searchable_data)AGAINST('*$search*' IN $mode MODE)")->pluck('searchable_id');
                 } else {
                     $apsearchable       = [];
                 }
@@ -204,7 +204,7 @@ class APSearchEngine extends Engine
                 }
                 break;
             default:
-                $apsearchable       = APSearchable::where('searchable_model', $searchable_model)->where('searchable_data', 'like', "%" . $search . "%")->join($builder->model->getTable(), $builder->model->getQualifiedKeyName(), "=", "searchables.searchable_id");
+                $apsearchable       = APSearchable::where('searchable_model', $searchable_model)->where('searchables.searchable_data', 'like', "%" . $search . "%")->join($builder->model->getTable(), $builder->model->getQualifiedKeyName(), "=", "searchables.searchable_id");
                 $apsearchable       = isset($builder->constraints) ? $apsearchable->mergeConstraintsFrom($builder->constraints) : $apsearchable;
                 foreach ($builder->orders as $order) {
                     $apsearchable = $apsearchable->orderBy($order['column'], $order['direction']);
