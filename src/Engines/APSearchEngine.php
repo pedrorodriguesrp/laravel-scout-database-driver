@@ -45,14 +45,18 @@ class APSearchEngine extends Engine
         $models->each(function ($model) use ($apsearchable) {
             if (($model->searchMode && $model->searchMode !== "DIRECT") || (!$model->searchMode && $this->apsearchable->searchMode !== "DIRECT")) {
                 $array              = $model->toSearchableArray();
+
+                // Normalize dates to a common format (e.g., Y-m-d)
+                $array = $this->normalizeDatesInArray($array);
+
                 $modelclass         = get_class($model);
                 $modelclass         = str_replace("\App", "App", $modelclass);
 
 
                 $apsearchable       = APSearchable::where('searchable_id', $model->getKey())->where("searchable_model", $modelclass)->first() ?? new APSearchable();
-                
-                // $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));     
-                
+
+                // $searchable_data    = mb_strtolower(implode(" ", $model->toSearchableArray()));
+
                 $searchable_data    = "";
                 foreach ($model->toSearchableArray() ?? [] as $key => $value) {
                     $searchable_data .= is_object($value) || is_array($value) ? json_encode($value) : $value;
@@ -131,11 +135,11 @@ class APSearchEngine extends Engine
          */
         $model      = $this->builder->model;
         $builder    = $this->getBuilder($model);
-        
+
         if ($this->builder->queryCallback) {
             call_user_func($this->builder->queryCallback, $builder);
         }
-        
+
         // $models     = $builder->whereIn(
         //     $model->getQualifiedKeyName(),
         //     array_values($searchResults)
@@ -148,7 +152,7 @@ class APSearchEngine extends Engine
         //     $searchResults = collect($searchResults);
         // }
         /** ********* **/
-        
+
         $searchResults = collect($searchResults);
         $results['hits'] = $searchResults->count();
         $chunks = array_chunk($searchResults->toArray(), $perPage);
@@ -177,6 +181,9 @@ class APSearchEngine extends Engine
     {
         $searchable_model   = get_class($builder->model);
         $search             = strtolower($builder->query);
+        // Normalize date in search query if any date-like string is detected
+        $search = $this->normalizeDate($search);
+
         $sanatized_search   = str_replace(["+", "-", "*"], "", $search);
         $this->builder      = $builder;
         $searchMode         = $builder->model->searchMode ?? $this->apsearchable->searchMode;
@@ -215,6 +222,43 @@ class APSearchEngine extends Engine
         $results = $apsearchable->unique()->toArray();
         $results = ["ids" => $results];
         return $results;
+    }
+
+    /**
+     * Normalize dates in the array to Y-m-d format.
+     *
+     * @param array $array
+     * @return array
+     */
+    protected function normalizeDatesInArray(array $array)
+    {
+        foreach ($array as $key => $value) {
+            if (is_string($value)) {
+                $array[$key] = $this->normalizeDate($value);
+            }
+        }
+        return $array;
+    }
+
+    /**
+     * Detect and normalize date strings to Y-m-d format.
+     *
+     * @param string $value
+     * @return string
+     */
+    protected function normalizeDate($value)
+    {
+        // Check for date formats and normalize them to 'Y-m-d'
+        if (preg_match('/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/', $value, $matches)) {
+            // Assume input could be either d/m/Y or m/d/Y, so we normalize both ways.
+            if (checkdate($matches[2], $matches[1], $matches[3])) {
+                return "{$matches[3]}-{$matches[2]}-{$matches[1]}"; // d/m/Y format
+            } elseif (checkdate($matches[1], $matches[2], $matches[3])) {
+                return "{$matches[3]}-{$matches[1]}-{$matches[2]}"; // m/d/Y format
+            }
+        }
+
+        return $value; // Return original if not a date
     }
 
     /**
@@ -402,7 +446,7 @@ class APSearchEngine extends Engine
      */
     public function flush($model)
     {
-        // 
+        //
     }
 
     public function lazyMap($builder, $results, $model){
